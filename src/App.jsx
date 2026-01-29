@@ -17,6 +17,16 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true';
   });
+    const [userRole, setUserRole] = useState(() => {
+    return localStorage.getItem('userRole') || 'user';
+  });
+
+  // Logout function
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userRole');
+  };
 
   // --- Facebook SDK Setup ---
   const [fbAppId] = useState('1125808962067340');
@@ -710,6 +720,15 @@ export default function App() {
 
     return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
+            {/* Logout Button */}
+      <div className="absolute top-4 left-4">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
+        >
+          <span>تسجيل الخروج</span>
+        </button>
+      </div>
       
       {/* Live Preview Modal */}
       {previewPost && (
