@@ -11,10 +11,9 @@ function Login({ onLogin }) {
     // يمكنك تغيير اسم المستخدم وكلمة المرور هنا
     if (username === 'admin' && password === 'admin123') 
       const userRole = username === 'admin' ? 'admin' : 'user';
-      onLogin(true
-                    localStorage.setItem('userRole', userRole);
-      .setItem('isLoggedIn', 'true');
-    } else {
+      onLogin(true);
+      localStorage.setItem('userRole', userRole);
+      localStorage.setItem('isLoggedIn', 'true');    } else {
       setError('اسم المستخدم أو كلمة المرور غير صحيحة');
     }
   };
