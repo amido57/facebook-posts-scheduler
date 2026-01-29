@@ -492,7 +492,7 @@ export default function App() {
   const processFilenamesRegex = () => {
       const captions = selectedFiles.map(file => {
           let rawName = file.name.replace(/\.[^/.]+$/, "").replace(/[_\-\.]/g, ' '); 
-          let arabicName = rawName.replace(/[^\u0600-\u06FF0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+          let arabicName = rawName.replace(/[^\u0600-\u06FF0-9 ]/g, '').replace(/\s+/g, ' ').trim();
           return arabicName || rawName;
       }).join('\n');
       setSingleText(captions);
