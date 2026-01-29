@@ -32,6 +32,12 @@ export default function App() {
     localStorage.removeItem('userRole');
   };
 
+    // Login handler
+  const handleLogin = (loggedIn, role) => {
+    setIsLoggedIn(loggedIn);
+    setUserRole(role);
+  };
+
   // --- Facebook SDK Setup ---
   const [fbAppId] = useState('1125808962067340');
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
@@ -719,7 +725,7 @@ export default function App() {
 
   // Check if user is logged in
   if (!isLoggedIn) {
-    return <Login onLogin={setIsLoggedIn} />;
+    return <Login onLogin={handleLogin} />;
   }
 
                                        // Check if admin wants to access user management page
