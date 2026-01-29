@@ -13,7 +13,8 @@ function Login({ onLogin }) {
       const userRole = username === 'admin' ? 'admin' : 'user';
       onLogin(true);
       localStorage.setItem('userRole', userRole);
-      localStorage.setItem('isLoggedIn', 'true');    } else {
+      localStorage.setItem('isLoggedIn', 'true');
+        } else {
       setError('اسم المستخدم أو كلمة المرور غير صحيحة');
     }
   };
