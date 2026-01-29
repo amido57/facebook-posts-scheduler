@@ -744,6 +744,7 @@ export default function App() {
         >
           <button
             onClick={() => setCurrentPage(currentPage === 'dashboard' ? 'users' : 'dashboard')}
+                >
                 <Users className="w-5 h-5" />
                 <span>{currentPage === 'dashboard' ? 'إدارة المستخدمين' : 'الرجوع لللوحة'}</span>
               </button>
