@@ -9,9 +9,11 @@ function Login({ onLogin }) {
     e.preventDefault();
     
     // يمكنك تغيير اسم المستخدم وكلمة المرور هنا
-    if (username === 'admin' && password === 'admin123') {
-      onLogin(true);
-      localStorage.setItem('isLoggedIn', 'true');
+    if (username === 'admin' && password === 'admin123') 
+      const userRole = username === 'admin' ? 'admin' : 'user';
+      onLogin(true
+                    localStorage.setItem('userRole', userRole);
+      .setItem('isLoggedIn', 'true');
     } else {
       setError('اسم المستخدم أو كلمة المرور غير صحيحة');
     }
@@ -70,10 +72,7 @@ function Login({ onLogin }) {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>اسم المستخدم الافتراضي: <span className="font-bold">admin</span></p>
-          <p>كلمة المرور الافتراضية: <span className="font-bold">admin123</span></p>
-        </div>
+
       </div>
     </div>
   );
