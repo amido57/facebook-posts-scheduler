@@ -1,4 +1,3 @@
-import Login from './Login';
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Calendar, Clock, List, Settings, Play, FileText, X, RefreshCw, 
@@ -15,9 +14,6 @@ const graphUrl = (path) => `https://graph.facebook.com/${GRAPH_VER}${path}`;
 export default function App() {
   // --- Facebook SDK Setup ---
   const [fbAppId] = useState('1125808962067340');
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('isLoggedIn') === 'true';
-  });
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [fbUser, setFbUser] = useState(null);
   const [manualInputToken, setManualInputToken] = useState('');
@@ -492,7 +488,7 @@ export default function App() {
   const processFilenamesRegex = () => {
       const captions = selectedFiles.map(file => {
           let rawName = file.name.replace(/\.[^/.]+$/, "").replace(/[_\-\.]/g, ' '); 
-          let arabicName = rawName.replace(/[^\u0600-\u06FF0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+          let arabicName = rawName.replace(/[^\u0600-\u06FF0-9\s]/g, '').replace(/\s+/g, ' ').trim();
           return arabicName || rawName;
       }).join('\n');
       setSingleText(captions);
@@ -986,18 +982,6 @@ export default function App() {
                                 if (timeStr) scheduledTimeDisplay = timeStr;
                             }
                             return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600" dir="rtl">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">مجدول فيسبوك الذكي</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
-          >
-            تسجيل الخروج
-          </button>
-        </div>
-      </div>
                             <div key={post.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-100 hover:border-blue-200 transition relative group">
                                 <div className="mt-1 w-12 h-12 flex-shrink-0 bg-slate-200 rounded overflow-hidden flex items-center justify-center">
                                     {post.previewUrl ? (post.type === 'video' ? <div className="relative w-full h-full"><video src={post.previewUrl} className="w-full h-full object-cover"/><div className="absolute inset-0 flex items-center justify-center bg-black/20"><Play className="w-4 h-4 text-white"/></div></div> : <img src={post.previewUrl} className="w-full h-full object-cover" />) : <FileText className="w-6 h-6 text-slate-400" />}
@@ -1036,18 +1020,5 @@ export default function App() {
         </div>
       </main>
     </div>
-    </div>
   );
-  
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem('isLoggedIn');
-  };
-
-  if (!isLoggedIn) {
-    return <Login onLogin={setIsLoggedIn} />;
-  }
-
-  return (
 }
