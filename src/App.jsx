@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Login from './Login';
 import { 
   Calendar, Clock, List, Settings, Play, FileText, X, RefreshCw, 
   Check, CheckCircle, User, Users, Zap, ExternalLink, ShieldCheck, 
@@ -12,6 +13,11 @@ const GRAPH_VER = 'v19.0';
 const graphUrl = (path) => `https://graph.facebook.com/${GRAPH_VER}${path}`;
 
 export default function App() {
+    // --- Authentication State ---
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  });
+
   // --- Facebook SDK Setup ---
   const [fbAppId] = useState('1125808962067340');
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
@@ -697,7 +703,12 @@ export default function App() {
     addLog('انتهت العملية.', 'info');
   };
 
-  return (
+  // Check if user is logged in
+  if (!isLoggedIn) {
+    return <Login onLogin={setIsLoggedIn} />;
+  }
+
+    return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
       
       {/* Live Preview Modal */}
