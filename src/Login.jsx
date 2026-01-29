@@ -8,14 +8,25 @@ function Login({ onLogin }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // يمكنك تغيير اسم المستخدم وكلمة المرور هنا
-    if (username === 'admin' && password === 'admin123')  {
-      const userRole = username === 'admin' ? 'admin' : 'user';
+        // التحقق من المستخدمين المخزنين في localStorage
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    // إذا لم يكن هناك مستخدمين، إضافة المستخدم الافتراضي
+    if (users.length === 0) {
+      const defaultUser = { id: 1, username: 'admin', password: 'admin123', role: 'admin' };
+      users.push(defaultUser);
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+    
+    // البحث عن المستخدم
+    const user = users.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+      const userRole = user.role;
       onLogin(true);
+      localStorage.setItem('currentUser', JSON.stringify(user));
       localStorage.setItem('userRole', userRole);
-      localStorage.setItem('isLoggedIn', 'true');
-        } else {
-      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+      localStorage.setItem('isLoggedIn', 'true');  setError('اسم المستخدم أو كلمة المرور غير صحيحة');
     }
   };
 
