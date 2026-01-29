@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Login from './Login';
+import UserManagement from './UserManagement';
 import { 
   Calendar, Clock, List, Settings, Play, FileText, X, RefreshCw, 
   Check, CheckCircle, User, Users, Zap, ExternalLink, ShieldCheck, 
@@ -20,6 +21,9 @@ export default function App() {
     const [userRole, setUserRole] = useState(() => {
     return localStorage.getItem('userRole') || 'user';
   });
+  
+  // صفحة الحالية
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
   // Logout function
   const handleLogout = () => {
@@ -719,6 +723,11 @@ export default function App() {
   }
 
     return (
+      
+  // عرض صفحة إدارة المستخدمين
+  if (currentPage === 'users' && userRole === 'admin') {
+    return <UserManagement />;
+  }
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
             {/* Logout Button */}
       <div className="absolute top-4 left-4">
@@ -726,6 +735,15 @@ export default function App() {
           onClick={handleLogout}
           className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
         >
+                  {userRole === 'admin' && (
+          <button
+            onClick={() => setCurrentPage(currentPage === 'dashboard' ? 'users' : 'dashboard')}
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            <Users className="w-5 h-5" />
+            <span>{currentPage === 'dashboard' ? 'إدارة المستخدمين' : 'الرجوع لللوحة'}</span>
+          </button>
+        )}
           <span>تسجيل الخروج</span>
         </button>
       </div>
