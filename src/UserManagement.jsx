@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Trash2, Edit3, Shield, User as UserIcon } from 'lucide-react';
+import { Users, UserPlus, Trash2, Edit3, Shield, User as UserIcon, Home } from 'lucide-react';
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -76,13 +76,22 @@ function UserManagement() {
               <Users className="w-8 h-8 text-blue-400" />
               <h1 className="text-3xl font-bold text-white">إدارة المستخدمين</h1>
             </div>
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition transform hover:scale-105"
-            >
-              <UserPlus className="w-5 h-5" />
-              <span>إضافة مستخدم جديد</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.location.href = '/'}
+                className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl transition transform hover:scale-105"
+              >
+                <Home className="w-5 h-5" />
+                <span>الصفحة الرئيسية</span>
+              </button>
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition transform hover:scale-105"
+              >
+                <UserPlus className="w-5 h-5" />
+                <span>إضافة مستخدم جديد</span>
+              </button>
+            </div>
           </div>
         </div>
 
