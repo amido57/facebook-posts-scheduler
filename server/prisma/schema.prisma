@@ -1,6 +1,3 @@
-// Prisma Schema for Facebook Posts Scheduler
-// Full Stack with Auth, Roles, and Encrypted Tokens
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,106 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model with role-based access control
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  password  String   // Hashed with bcrypt
-  role      Role     @default(USER)
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("OWNER") // OWNER only (one workspace per account)
+  workspace    Workspace?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String   @unique
+  owner     User     @relation(fields: [ownerId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  sessions        Session[]
-  facebookPages   FacebookPage[]
-  scheduledPosts  ScheduledPost[]
-
-  @@index([username])
-  @@map("users")
-}
-
-// Role enum
-enum Role {
-  ADMIN
-  USER
-}
-
-// Session model for JWT refresh tokens
-model Session {
-  id           String   @id @default(uuid())
-  userId       String
-  refreshToken String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([refreshToken])
-  @@map("sessions")
-}
-
-// Facebook Page with encrypted access token
-model FacebookPage {
-  id                String   @id @default(uuid())
-  userId            String
-  facebookPageId    String   @unique  // Facebook's page ID
-  pageName          String
-  pageAccessToken   String   // ENCRYPTED with AES-GCM
-  tokenIv           String   // Initialization Vector for encryption
-  tokenAuthTag      String   // Authentication tag for encryption
-  pictureUrl        String?
-  followersCount    Int      @default(0)
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scheduledPosts ScheduledPost[]
-
-  @@index([userId])
-  @@index([facebookPageId])
-  @@map("facebook_pages")
-}
-
-// Scheduled Post model
-model ScheduledPost {
-  id                  String        @id @default(uuid())
-  userId              String
-  facebookPageId      String
-  content             String        @db.Text
-  mediaUrl            String?
-  mediaType           MediaType?
-  scheduledTime       DateTime
-  status              PostStatus    @default(PENDING)
-  facebookPostId      String?       // ID from Facebook after posting
-  errorMessage        String?       @db.Text
-  retryCount          Int           @default(0)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  publishedAt         DateTime?
-
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  facebookPage FacebookPage @relation(fields: [facebookPageId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([facebookPageId])
-  @@index([scheduledTime])
-  @@index([status])
-  @@map("scheduled_posts")
-}
-
-// Media type enum
-enum MediaType {
-  IMAGE
-  VIDEO
-}
-
-// Post status enum
-enum PostStatus {
-  PENDING
-  PROCESSING
-  PUBLISHED
-  FAILED
-  CANCELLED
 }
