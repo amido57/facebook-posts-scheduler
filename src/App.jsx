@@ -722,12 +722,13 @@ export default function App() {
     return <Login onLogin={setIsLoggedIn} />;
   }
 
-    return (
-      
-  // عرض صفحة إدارة المستخدمين
+                                       // Check if admin wants to access user management page
   if (currentPage === 'users' && userRole === 'admin') {
     return <UserManagement />;
   }
+
+    return (
+      
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
             {/* Logout Button */}
       <div className="absolute top-4 left-4">
