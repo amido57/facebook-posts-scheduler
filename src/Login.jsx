@@ -9,7 +9,7 @@ function Login({ onLogin }) {
     e.preventDefault();
     
     // يمكنك تغيير اسم المستخدم وكلمة المرور هنا
-    if (username === 'admin' && password === 'admin123') 
+    if (username === 'admin' && password === 'admin123')  {
       const userRole = username === 'admin' ? 'admin' : 'user';
       onLogin(true);
       localStorage.setItem('userRole', userRole);
