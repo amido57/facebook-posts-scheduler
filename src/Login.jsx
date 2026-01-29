@@ -23,7 +23,7 @@ function Login({ onLogin }) {
     
     if (user) {
       const userRole = user.role;
-      onLogin(true);
+      onLogin(true, userRole);
       localStorage.setItem('currentUser', JSON.stringify(user));
       localStorage.setItem('userRole', userRole);
       localStorage.setItem('isLoggedIn', 'true');
