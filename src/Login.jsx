@@ -26,7 +26,9 @@ function Login({ onLogin }) {
       onLogin(true);
       localStorage.setItem('currentUser', JSON.stringify(user));
       localStorage.setItem('userRole', userRole);
-      localStorage.setItem('isLoggedIn', 'true');  setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+      localStorage.setItem('isLoggedIn', 'true');
+    } else {
+      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
     }
   };
 
