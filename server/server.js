@@ -5,6 +5,11 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// Additional imports to serve the front-end build
+import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
 // Load environment variables from .env file (DATABASE_URL, JWT_SECRET, etc.)
 dotenv.config();
 
@@ -160,4 +165,22 @@ app.get('/api/workspaces', authenticate, async (req, res) => {
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
+});
+
+// Serve static files from the Vite build output.
+// Compute __dirname in ES module context
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// The build output is generated in the root-level `dist` directory by `vite build`.
+const staticDir = path.join(__dirname, '..', 'dist');
+app.use(express.static(staticDir));
+
+// For any routes not starting with `/api`, return the built index.html to enable client-side routing.
+app.get('*', (req, res) => {
+  // Do not interfere with API routes
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ ok: false, error: 'API_ROUTE_NOT_FOUND' });
+  }
+  res.sendFile(path.join(staticDir, 'index.html'));
 });
