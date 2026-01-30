@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"nodemon server.js\"",
     "build": "vite build",
-    "start": "node server/server.js"
+    "start": "node server/server.js",
+    "postinstall": "prisma generate"
+    
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
