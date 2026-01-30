@@ -3,7 +3,7 @@
 // privileges within the system. Passwords are stored securely as hashes.
 
 datasource db {
-  provider = "ppostgresql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
