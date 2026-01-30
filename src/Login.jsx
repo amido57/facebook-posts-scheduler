@@ -1,34 +1,86 @@
 import { useState } from 'react';
 
 function Login({ onLogin }) {
-  const [username, setUsername] = useState('');
+  const [showSignup, setShowSignup] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  // Login using backend API
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-        // التحقق من المستخدمين المخزنين في localStorage
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    // إذا لم يكن هناك مستخدمين، إضافة المستخدم الافتراضي
-    if (users.length === 0) {
-      const defaultUser = { id: 1, username: 'admin', password: 'admin123', role: 'admin' };
-      users.push(defaultUser);
-      localStorage.setItem('users', JSON.stringify(users));
+    setError('');
+    setMessage('');
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        switch (data.error) {
+          case 'ACCOUNT_NOT_APPROVED':
+            setError('حسابك في انتظار موافقة المدير.');
+            break;
+          case 'INVALID_CREDENTIALS':
+            setError('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+            break;
+          default:
+            setError('حدث خطأ أثناء تسجيل الدخول.');
+        }
+      } else {
+        onLogin(true, data.user.role);
+        localStorage.setItem('userRole', data.user.role);
+        localStorage.setItem('isLoggedIn', 'true');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('فشل الاتصال بالخادم.');
     }
-    
-    // البحث عن المستخدم
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-      const userRole = user.role;
-      onLogin(true, userRole);
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      localStorage.setItem('userRole', userRole);
-      localStorage.setItem('isLoggedIn', 'true');
-    } else {
-      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+  };
+
+  // Signup using backend API
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    if (!name.trim()) {
+      setError('الرجاء إدخال الاسم.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password, name })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        if (data.error === 'EMAIL_ALREADY_EXISTS') {
+          setError('هذا البريد الإلكتروني مستخدم بالفعل.');
+        } else if (data.error === 'EMAIL_AND_PASSWORD_REQUIRED') {
+          setError('الرجاء إدخال البريد وكلمة المرور.');
+        } else {
+          setError('فشل التسجيل.');
+        }
+      } else {
+        if (data.pending) {
+          setMessage('تم التسجيل بنجاح! حسابك ينتظر موافقة المدير.');
+          setShowSignup(false);
+        } else {
+          onLogin(true, data.user.role);
+          localStorage.setItem('userRole', data.user.role);
+          localStorage.setItem('isLoggedIn', 'true');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError('فشل الاتصال بالخادم.');
     }
   };
 
@@ -37,55 +89,109 @@ function Login({ onLogin }) {
       <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">مجدول فيسبوك الذكي</h1>
-          <p className="text-gray-600">تسجيل الدخول إلى حسابك</p>
+          <p className="text-gray-600">{showSignup ? 'إنشاء حساب جديد' : 'تسجيل الدخول إلى حسابك'}</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-              اسم المستخدم
-            </label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="أدخل اسم المستخدم"
-              required
-            />
+        {message && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
+            {message}
           </div>
-
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              كلمة المرور
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="أدخل كلمة المرور"
-              required
-            />
+        )}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {error}
           </div>
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-              {error}
+        )}
+        {!showSignup ? (
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">البريد الإلكتروني</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="أدخل البريد الإلكتروني"
+                required
+              />
             </div>
-          )}
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105"
-          >
-            تسجيل الدخول
-          </button>
-        </form>
-
-
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">كلمة المرور</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="أدخل كلمة المرور"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105"
+            >
+              تسجيل الدخول
+            </button>
+            <p className="text-sm text-gray-600 text-center mt-2">
+              ليس لديك حساب؟{' '}
+              <button type="button" onClick={() => { setShowSignup(true); setMessage(''); setError(''); }} className="text-blue-600 hover:underline">
+                إنشاء حساب
+              </button>
+            </p>
+          </form>
+        ) : (
+          <form onSubmit={handleSignup} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">الاسم</label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="أدخل اسمك الكامل"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email-signup">البريد الإلكتروني</label>
+              <input
+                id="email-signup"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="أدخل بريدك الإلكتروني"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password-signup">كلمة المرور</label>
+              <input
+                id="password-signup"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="أدخل كلمة المرور"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105"
+            >
+              تسجيل
+            </button>
+            <p className="text-sm text-gray-600 text-center mt-2">
+              لديك حساب بالفعل؟{' '}
+              <button type="button" onClick={() => { setShowSignup(false); setMessage(''); setError(''); }} className="text-blue-600 hover:underline">
+                تسجيل الدخول
+              </button>
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );
