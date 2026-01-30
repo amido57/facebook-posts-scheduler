@@ -23,6 +23,8 @@ model User {
   passwordHash String
   name         String?
   role         Role     @default(MEMBER)
+  /// Whether the user has been approved by an administrator. New sign‑ups are unapproved by default.
+  approved     Boolean  @default(false)
   // A user can own zero or more workspaces. The owner relation below
   // establishes ownership; membership is tracked via a separate join table.
   workspaces   Workspace[]       @relation("OwnedWorkspaces")
