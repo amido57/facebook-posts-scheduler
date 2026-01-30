@@ -57,33 +57,34 @@ async function authenticate(req, res, next) {
   }
 }
 
-// Route: Register a new user. If no user exists, allow first signup. Later, only admin can create users.
+// Route: Register a new user. The first signup becomes an approved admin; subsequent sign‑ups are created as
+// unapproved members awaiting administrator approval. This route is public.
 app.post('/api/signup', async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password) {
     return res.status(400).json({ ok: false, error: 'EMAIL_AND_PASSWORD_REQUIRED' });
   }
-  // Check if any user exists
-  const existingUsers = await prisma.user.findMany({ take: 1 });
-  if (existingUsers.length > 0) {
-    // Require authentication and admin role
-    if (!req.user) {
-      return res.status(403).json({ ok: false, error: 'ONLY_ADMIN_CAN_CREATE_USERS' });
-    }
-    if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({ ok: false, error: 'ADMIN_ROLE_REQUIRED' });
-    }
-  }
-  // Make sure email is unique
+  // Count existing users to determine whether this is the first signup
+  const userCount = await prisma.user.count();
+  // Email must be unique
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return res.status(400).json({ ok: false, error: 'EMAIL_ALREADY_EXISTS' });
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  const role = existingUsers.length === 0 ? 'ADMIN' : 'MEMBER';
-  const user = await prisma.user.create({ data: { email, passwordHash, name, role } });
-  // Return minimal user info
-  return res.status(201).json({ ok: true, user: { id: user.id, email: user.email, role: user.role } });
+  // First user becomes an approved ADMIN; others become unapproved MEMBER
+  const role = userCount === 0 ? 'ADMIN' : 'MEMBER';
+  const approved = userCount === 0;
+  const user = await prisma.user.create({ data: { email, passwordHash, name, role, approved } });
+  // If the user is auto‑approved (first signup) also create a workspace for them to own
+  if (approved) {
+    // Create a default workspace for the admin
+    const workspace = await prisma.workspace.create({ data: { name: `${email.split('@')[0]}'s Workspace`, ownerId: user.id } });
+    // Create membership for the admin
+    await prisma.workspaceMembership.create({ data: { userId: user.id, workspaceId: workspace.id, role: 'OWNER' } });
+  }
+  // Return minimal user info and whether approval is required
+  return res.status(201).json({ ok: true, user: { id: user.id, email: user.email, role: user.role, approved: user.approved }, pending: !approved });
 });
 
 // Route: Login and issue JWT
@@ -95,6 +96,10 @@ app.post('/api/login', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     return res.status(401).json({ ok: false, error: 'INVALID_CREDENTIALS' });
+  }
+  // Ensure the account has been approved by an administrator
+  if (!user.approved) {
+    return res.status(403).json({ ok: false, error: 'ACCOUNT_NOT_APPROVED' });
   }
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
@@ -158,6 +163,32 @@ app.get('/api/workspaces', authenticate, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ ok: false, error: 'FAILED_TO_LIST_WORKSPACES' });
+  }
+});
+
+// Route: List users pending approval (admin only)
+app.get('/api/users/pending', authenticate, async (req, res) => {
+  // Only admins can view pending users
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ ok: false, error: 'NOT_AUTHORIZED' });
+  }
+  const pendingUsers = await prisma.user.findMany({ where: { approved: false } });
+  const result = pendingUsers.map(u => ({ id: u.id, email: u.email, name: u.name, role: u.role }));
+  res.json({ ok: true, users: result });
+});
+
+// Route: Approve a pending user (admin only)
+app.post('/api/users/:id/approve', authenticate, async (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ ok: false, error: 'NOT_AUTHORIZED' });
+  }
+  const { id } = req.params;
+  try {
+    const user = await prisma.user.update({ where: { id }, data: { approved: true } });
+    res.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, role: user.role, approved: user.approved } });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ ok: false, error: 'FAILED_TO_APPROVE_USER' });
   }
 });
 
