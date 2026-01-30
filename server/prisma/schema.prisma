@@ -1,10 +1,20 @@
+// This schema extends the original facebook-posts-scheduler models to support
+// multiple users and workspaces. Each User has a role which determines
+// privileges within the system. Passwords are stored securely as hashes.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+enum Role {
+  ADMIN    // System administrator with full access to all workspaces
+  OWNER    // Owner of a workspace, can manage workspace content and users
+  MEMBER   // Regular member of a workspace
 }
 
 model User {
@@ -12,17 +22,47 @@ model User {
   email        String   @unique
   passwordHash String
   name         String?
-  role         String   @default("OWNER") // OWNER only (one workspace per account)
-  workspace    Workspace?
+  role         Role     @default(MEMBER)
+  // A user can own zero or more workspaces. The owner relation below
+  // establishes ownership; membership is tracked via a separate join table.
+  workspaces   Workspace[]       @relation("OwnedWorkspaces")
+  memberships  WorkspaceMembership[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
 model Workspace {
-  id        String   @id @default(cuid())
-  name      String
-  ownerId   String   @unique
-  owner     User     @relation(fields: [ownerId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String        @id @default(cuid())
+  name        String
+  ownerId     String
+  owner       User          @relation("OwnedWorkspaces", fields: [ownerId], references: [id])
+  memberships WorkspaceMembership[]
+  posts       Post[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// Many‑to‑many relation between Users and Workspaces with a role inside the workspace.
+model WorkspaceMembership {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        Role      @default(MEMBER)
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@unique([userId, workspaceId])
+}
+
+// Example Post model for scheduling posts. This can be extended with more fields
+// such as content, scheduled time, etc.
+model Post {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
