@@ -113,7 +113,10 @@ app.post('/api/login', async (req, res) => {
     sameSite: 'lax',
     maxAge: ACCESS_TTL_SEC * 1000
   });
-  return res.json({ ok: true, token, user: { id: user.id, email: user.email, role: user.role } });
+  // For security, we do not include the JWT token in the JSON response.
+  // The token is set as an HTTP‑only cookie (sid) above. Clients should rely on the cookie and
+  // avoid storing the token in localStorage or exposing it to JavaScript.
+  return res.json({ ok: true, user: { id: user.id, email: user.email, role: user.role } });
 });
 
 // Route: Logout
