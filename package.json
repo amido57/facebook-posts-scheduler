@@ -7,7 +7,7 @@
     "dev": "concurrently \"vite\" \"nodemon server.js\"",
     "build": "vite build",
     "start": "node server/server.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate --schema=server/prisma/schema.prisma"
     
   },
   "dependencies": {
